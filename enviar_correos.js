@@ -2,16 +2,33 @@ const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
 
-// Lee el archivo CSV con los datos de los nuevos estudiantes
+// Lee únicamente el archivo generado por detectar_nuevos.js
 const csvPath = path.join(__dirname, 'nuevos_estudiantes.csv');
+
 const contenido = fs.readFileSync(csvPath, 'utf-8').trim();
-const lineas = contenido.split(/\r?\n/);
-const encabezado = lineas[0].split(',').map(h => h.trim().toLowerCase());
+
+// Si el archivo solo contiene el encabezado,
+// significa que no hay estudiantes nuevos.
+const lineas = contenido ? contenido.split(/\r?\n/) : [];
+
+if (lineas.length <= 1) {
+  console.log('No hay estudiantes nuevos.');
+  console.log('No se enviaran correos en esta ejecucion.');
+  process.exit(0);
+}
+
+const encabezado = lineas[0]
+  .split(',')
+  .map(h => h.trim().toLowerCase());
 
 const filas = lineas.slice(1).map(linea => {
   const valores = linea.split(',').map(v => v.trim());
   const fila = {};
-  encabezado.forEach((campo, i) => fila[campo] = valores[i]);
+
+  encabezado.forEach((campo, i) => {
+    fila[campo] = valores[i];
+  });
+
   return fila;
 });
 
@@ -43,7 +60,7 @@ function armarCuerpo(fila) {
 
 Gracias por culminar el curso de ${nombreCurso} en nuestro programa de educación continua.
 
-Tu código personal para rendir la evaluacion de certificación Microsoft es:
+Tu código personal para rendir la evaluación de Microsoft es:
 
 ${fila.codigo}
 
@@ -62,7 +79,7 @@ function obtenerAsunto(fila) {
     return 'Tu código para la evaluación de Microsoft Power BI';
   }
 
-  return 'Tu código para la evaluación de certificación Microsoft';
+  return 'Tu código para la evaluación de Microsoft';
 }
 
 async function enviarTodos() {
@@ -82,8 +99,12 @@ async function enviarTodos() {
       );
 
       enviados++;
+
     } catch (error) {
-      console.error(`Error enviando a ${fila.correo}: ${error.message}`);
+      console.error(
+        `Error enviando a ${fila.correo}: ${error.message}`
+      );
+
       process.exit(1);
     }
   }
