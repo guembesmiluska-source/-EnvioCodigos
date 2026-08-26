@@ -1,3 +1,4 @@
+```groovy
 pipeline {
     agent any
 
@@ -6,6 +7,13 @@ pipeline {
     }
 
     stages {
+
+        stage('0. Instalacion de Dependencias') {
+            steps {
+                echo '--- Instalando dependencias de Node.js ---'
+                bat 'npm install'
+            }
+        }
 
         stage('1. Calidad: Validacion de Datos') {
             steps {
@@ -43,3 +51,4 @@ pipeline {
         }
     }
 }
+```
